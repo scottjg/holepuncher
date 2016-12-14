@@ -46,5 +46,9 @@ module Holepuncher
     def ext_ip
       @upnp.externalIP
     end
+
+    def gateway_type
+      "UPnP"
+    end
   end
 end

@@ -40,5 +40,9 @@ module Holepuncher
     def ext_ip
       NATPMP.addr
     end
+
+    def gateway_type
+      "NAT-PMP"
+    end
   end
 end

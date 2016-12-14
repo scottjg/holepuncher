@@ -1,4 +1,42 @@
 #!/usr/bin/env ruby
 require 'holepuncher'
+require 'optparse'
 
-puts "hello"
+$quiet = true
+OptionParser.new do |o|
+  o.on('-v') { |b| $quiet = false }
+  o.on('-p LIST,OF,PORTS') { |port_list| $ports = port_list.split(",").map { |p| p.to_i } }
+  o.on('-h') { puts o; exit }
+  o.parse!
+end
+
+if $ports.empty?
+  $stderr.puts "Need to specify ports to map!"
+  exit 1
+end
+
+$stderr.puts "discovering gateway..." if !$quiet
+gw = Holepuncher::Gateway.discover
+$stderr.puts "discovered #{gw.gateway_type} gateway" if !$quiet
+
+at_exit do
+  $stderr.puts "unmapping ports..."
+  $ports.each do |port|
+    gw.unmap(port, :tcp)
+    gw.unmap(port, :udp)
+  end
+end
+
+while true
+  $ports.each do |port|
+    gw.map(port, :tcp)
+    $stderr.puts "mapped tcp port #{port}" if !$quiet
+    gw.map(port, :udp)
+    $stderr.puts "mapped udp port #{port}" if !$quiet
+  end
+  $stderr.puts "sleeping for 15 minutes before refreshing" if !$quiet
+  sleep (15*60)
+  $stderr.puts "discovering gateway..." if !$quiet
+  gw = Holepuncher::Gateway.discover
+  $stderr.puts "discovered #{gw.gateway_type} gateway" if !$quiet
+end
